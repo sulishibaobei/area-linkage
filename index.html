@@ -62,11 +62,17 @@
 </body>
 <script src="jquery.js"></script>
 <script>
+    /***
+     * 1.采用127.0.0.1等类似服务器方式打开
+     * 2.代码局限性太大。一个页面有两个地方需要用到此地址栏。不通用
+     * 3.功能点缺陷。（暂时没看出来）
+     * 4.请求到的数据一次加载了。应该分批加载
+     */
     $(function() {
-        var city = "";
-        var cityCode = "";
+        var city = ""; //定义一个通用的表示选中的值
+        var cityCode = ""; //定义一个通用的存取值
         var filter = {
-            init: function() {
+            init: function() { //初次进入获取数据  这时候加载的是省份
                 $.ajax({
                     url: "mask.json",
                     type: "get",
@@ -77,44 +83,43 @@
                                 $("#addrList").append("<li value='" + val.item_code + "' level=1" + ">" + val.item_name + "</li>");
                             }
                         })
-                    },
-                    error: function(error) {}
+                    }
                 });
             },
             bindEvent: function() {
-                $("body").on('click', '.adddress', function() {
+                $("body").on('click', '.adddress', function() { //点击选择地区
                     filter.init();
                     $("#addrSelDiv").show();
                 });
-                $("body").on('click', '.mod_address_slide_list_2 li', function(e) {
+                $("body").on('click', '.mod_address_slide_list_2 li', function(e) { //点击列表数据
                     e.preventDefault();
                     var that = $(this);
                     that.addClass('on').siblings().removeClass('on'); //将自身值设置为选中
-                    var levelLen = $(".mod_address_slide_tabs_1").find('li').length;
-                    var level2 = that.attr('level');
+                    var levelLen = $(".mod_address_slide_tabs_1").find('li').length; //已经选择的值到第几级
+                    var level2 = that.attr('level'); //当前列表显示的值是第几级
                     //获取前两位的值
-                    if (levelLen == 1 && level2 == "1") { //说明当前状态选择的是省
-                        updateLevel(true, that.html());
+                    if (levelLen == 1 && level2 == "1") { //说明当前状态选择的是省 切是第一次选择
+                        filter.updateLevel(true, that.html()); //更新mod_address_slide_tabs_1 选中值得编号
                         setCookie('province', that.parent().html()); //存值
+                        $("#addrList").html(""); //清空列表
+                        $.each(cityCode, function(i, val) {
+                            if (val.item_code.substr(4, 2) == '00' && val.item_code.substr(0, 2) == that.val().toString().substr(0, 2) && val.item_code.substr(2, 4) != '0000') {
+                                $("#addrList").append("<li value='" + val.item_code + "' level=2" + ">" + val.item_name + "</li>");
+                            }
+                        })
+                    } else if (levelLen == 2 && level2 == "1") { //说明当前选择的状态是省，但不是第一次选择 出现了省 市
+                        filter.updateLevel(false, that.html());
                         $("#addrList").html("");
                         $.each(cityCode, function(i, val) {
                             if (val.item_code.substr(4, 2) == '00' && val.item_code.substr(0, 2) == that.val().toString().substr(0, 2) && val.item_code.substr(2, 4) != '0000') {
                                 $("#addrList").append("<li value='" + val.item_code + "' level=2" + ">" + val.item_name + "</li>");
                             }
                         })
-                    } else if (levelLen == 2 && level2 == "1") {
-                        updateLevel(false, that.html());
-                        $("#addrList").html("");
-                        $.each(cityCode, function(i, val) {
-                            if (val.item_code.substr(4, 2) == '00' && val.item_code.substr(0, 2) == that.val().toString().substr(0, 2) && val.item_code.substr(2, 4) != '0000') {
-                                $("#addrList").append("<li value='" + val.item_code + "' level=2" + ">" + val.item_name + "</li>");
-                            }
-                        })
-                    } else if (levelLen == 3 && level2 == "1") {
+                    } else if (levelLen == 3 && level2 == "1") { //说明当前选择的状态是省，但不是第一次选择 已经出现三级联动
                         var clonehtml = $(".mod_address_slide_tabs_1").find('li:last-child').clone(); //请选择部分
                         $(".mod_address_slide_tabs_1").html('');
                         $(".mod_address_slide_tabs_1").append(clonehtml);
-                        updateLevel(true, that.html());
+                        filter.updateLevel(true, that.html());
                         setCookie('province', that.parent().html()); //存值
                         $("#addrList").html("");
                         $.each(cityCode, function(i, val) {
@@ -122,8 +127,8 @@
                                 $("#addrList").append("<li value='" + val.item_code + "' level=2" + ">" + val.item_name + "</li>");
                             }
                         })
-                    } else if (levelLen == 2 && level2 == "2") {
-                        updateLevel(true, that.html());
+                    } else if (levelLen == 2 && level2 == "2") { //说明是第一次选择市
+                        filter.updateLevel(true, that.html());
                         setCookie('city', that.parent().html()); //存值
                         $("#addrList").html("");
                         $.each(cityCode, function(i, val) {
@@ -131,7 +136,7 @@
                                 $("#addrList").append("<li value='" + val.item_code + "' level=3" + ">" + val.item_name + "</li>");
                             }
                         })
-                    } else if (levelLen == 3 && level2 == "3") {
+                    } else if (levelLen == 3 && level2 == "3") { //说明当前选择的状态是市，不是第一次选择市
                         setCookie('place', that.parent().html()); //存值
                         city = "";
                         var obj = $("#addrNav").find('li');
@@ -141,8 +146,8 @@
                         $(".showAddr").html(city + that.html());
                         $("#addrSelDiv").hide();
 
-                    } else if (levelLen == 3 && level2 == "2") {
-                        updateLevel(false, that.html());
+                    } else if (levelLen == 3 && level2 == "2") { //当前选择的是地区  。弹框关闭，值回显
+                        filter.updateLevel(false, that.html());
                         setCookie('city', that.parent().html()); //存值
                         $("#addrList").html("");
                         $.each(cityCode, function(i, val) {
@@ -179,32 +184,34 @@
                     }
                     $("#addrSelDiv").hide();
                 })
+            },
+            updateLevel: function(flag, val) { //  更新level编号
+                if (flag) {
+                    var clonehtml = $(".mod_address_slide_tabs_1").find('li:last-child').clone(); //请选择部分
+                    $(".mod_address_slide_tabs_1").find('li:last-child').before(clonehtml);
+                }
+                $(".mod_address_slide_tabs_1").find('li:last-child').prev().find('span').html(val);
+                var obj = $(".mod_address_slide_tabs_1").find('li');
+                for (var i = 1; i <= obj.length; i++) {
+                    obj.eq(i - 1).attr('level', i);
+                }
+                $(".mod_address_slide_tabs_1").find('li:last-child').addClass('cur').siblings().removeClass('cur');
             }
         };
 
         filter.bindEvent();
 
+        /**
+         * 获取请求到的数据
+         */
         function getCityCode(data) {
             cityCode = data;
             return cityCode;
         }
 
-        //  更新level编号
-        function updateLevel(flag, val) {
-            if (flag) {
-                var clonehtml = $(".mod_address_slide_tabs_1").find('li:last-child').clone(); //请选择部分
-                $(".mod_address_slide_tabs_1").find('li:last-child').before(clonehtml);
-            }
-            $(".mod_address_slide_tabs_1").find('li:last-child').prev().find('span').html(val);
-            var obj = $(".mod_address_slide_tabs_1").find('li');
-            for (var i = 1; i <= obj.length; i++) {
-                obj.eq(i - 1).attr('level', i);
-            }
-            $(".mod_address_slide_tabs_1").find('li:last-child').addClass('cur').siblings().removeClass('cur');
-        }
-
-
-
+        /***
+         * 设置cookie
+         */
         function setCookie(name, value) {
             var Days = 30 * 12;
             var expires = new Date();
