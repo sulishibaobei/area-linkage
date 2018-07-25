@@ -58,6 +58,7 @@
             </div>
         </div>
     </div>
+
 </body>
 <script src="jquery.js"></script>
 <script>
@@ -93,66 +94,48 @@
                 $("body").on('click', '.mod_address_slide_list_2 li', function(e) { //点击列表数据
                     e.preventDefault();
                     var that = $(this);
-                    that.addClass('on').siblings().removeClass('on'); //将自身值设置为选中
-                    var levelLen = $(".mod_address_slide_tabs_1").find('li').length; //已经选择的值到第几级
+                    //点击第一级菜单时  1.显示选中 2.存值  3.查询有没有下一级(根据val 根据name)  4.(先清空数据)存在数据更新列表 5.值回显（有下一级显示在上面，无下一级关闭弹框，获取全部值）
+                    that.addClass('on').siblings().removeClass('on'); //1.将自身值设置为选中
                     var level2 = that.attr('level'); //当前列表显示的值是第几级
-                    //获取前两位的值
-                    if (levelLen == 1 && level2 == "1") { //说明当前状态选择的是省 切是第一次选择
-                        filter.updateLevel(true, that.html()); //更新mod_address_slide_tabs_1 选中值得编号
-                        setCookie('province', that.parent().html()); //存值
-                        $("#addrList").html(""); //清空列表
+                    var targetLi = $(".mod_address_slide_tabs_1").find('li[level=' + level2 + ']'); //当再次回来点击清空后面的值，变成请选择
+                    if (targetLi && targetLi.length > 0) {
+                        targetLi.nextAll().remove();
+                        var clone = targetLi.clone();
+                        $(".mod_address_slide_tabs_1").append(clone);
+                        $(".mod_address_slide_tabs_1").find('li:last-child').addClass('cur').siblings().removeClass('cur').end().removeAttr('level').find('span').html('请选择');
+                    }
+                    if (level2 == "1") { //不管有没有值都进行这一步 列表==市
+                        setCookie('province', that.parent().html()); //2.存值
+                        $("#addrList").html("");
+                        filter.updateLevel(that); //5
                         $.each(cityCode, function(i, val) {
                             if (val.item_code.substr(4, 2) == '00' && val.item_code.substr(0, 2) == that.val().toString().substr(0, 2) && val.item_code.substr(2, 4) != '0000') {
-                                $("#addrList").append("<li value='" + val.item_code + "' level=2" + ">" + val.item_name + "</li>");
+                                if (val) {
+                                    $("#addrList").append("<li value='" + val.item_code + "' level=2" + ">" + val.item_name + "</li>"); //4
+                                } else {
+                                    filter.setValue();
+                                }
                             }
-                        })
-                    } else if (levelLen == 2 && level2 == "1") { //说明当前选择的状态是省，但不是第一次选择 出现了省 市
-                        filter.updateLevel(false, that.html());
+                        });
+                    } else if (level2 == "2") { // 列表==区
+                        setCookie('city', that.parent().html()); //2.存值
                         $("#addrList").html("");
-                        $.each(cityCode, function(i, val) {
-                            if (val.item_code.substr(4, 2) == '00' && val.item_code.substr(0, 2) == that.val().toString().substr(0, 2) && val.item_code.substr(2, 4) != '0000') {
-                                $("#addrList").append("<li value='" + val.item_code + "' level=2" + ">" + val.item_name + "</li>");
-                            }
-                        })
-                    } else if (levelLen == 3 && level2 == "1") { //说明当前选择的状态是省，但不是第一次选择 已经出现三级联动
-                        var clonehtml = $(".mod_address_slide_tabs_1").find('li:last-child').clone(); //请选择部分
-                        $(".mod_address_slide_tabs_1").html('');
-                        $(".mod_address_slide_tabs_1").append(clonehtml);
-                        filter.updateLevel(true, that.html());
-                        setCookie('province', that.parent().html()); //存值
-                        $("#addrList").html("");
-                        $.each(cityCode, function(i, val) {
-                            if (val.item_code.substr(4, 2) == '00' && val.item_code.substr(0, 2) == that.val().toString().substr(0, 2) && val.item_code.substr(2, 4) != '0000') {
-                                $("#addrList").append("<li value='" + val.item_code + "' level=2" + ">" + val.item_name + "</li>");
-                            }
-                        })
-                    } else if (levelLen == 2 && level2 == "2") { //说明是第一次选择市
-                        filter.updateLevel(true, that.html());
-                        setCookie('city', that.parent().html()); //存值
-                        $("#addrList").html("");
+                        filter.updateLevel(that); //5
                         $.each(cityCode, function(i, val) {
                             if (val.item_code.substr(0, 4) == that.val().toString().substr(0, 4) && val.item_code.substr(4, 2) != '00') {
-                                $("#addrList").append("<li value='" + val.item_code + "' level=3" + ">" + val.item_name + "</li>");
+                                if (val) {
+                                    $("#addrList").append("<li value='" + val.item_code + "' level=3" + ">" + val.item_name + "</li>"); //4
+                                } else {
+                                    filter.setValue();
+                                }
                             }
                         })
-                    } else if (levelLen == 3 && level2 == "3") { //说明当前选择的状态是市，不是第一次选择市
-                        setCookie('place', that.parent().html()); //存值
-                        city = "";
-                        var obj = $("#addrNav").find('li');
-                        for (var i = 0; i < obj.length - 1; i++) {
-                            city += obj.eq(i).find('span').html();
-                        }
-                        $(".showAddr").html(city + that.html());
-                        $("#addrSelDiv").hide();
-                    } else if (levelLen == 3 && level2 == "2") { //当前选择的是地区  。弹框关闭，值回显
-                        filter.updateLevel(false, that.html());
-                        setCookie('city', that.parent().html()); //存值
-                        $("#addrList").html("");
-                        $.each(cityCode, function(i, val) {
-                            if (val.item_code.substr(0, 4) == that.val().toString().substr(0, 4) && val.item_code.substr(4, 2) != '00') {
-                                $("#addrList").append("<li value='" + val.item_code + "' level=3" + ">" + val.item_name + "</li>");
-                            }
-                        })
+                    } else if (level2 == "3") { //清空列表
+                        setCookie('place', that.parent().html()); //2.存值
+                        filter.updateLevel(that); //5
+                        filter.setValue();
+                    } else {
+                        return;
                     }
                 });
                 $("body").on('click', '.mod_address_slide_tabs_1 li', function() {
@@ -169,7 +152,13 @@
                 });
 
                 $("body").on('click', '.showAddr', function() {
-                    $(".adddress").click();
+                    if ($(this).html() == "") {
+                        $(".adddress").click();
+                    } else {
+                        $(".adddress").click();
+                        $(".mod_address_slide_tabs_1").find('li:last-child').prev().addClass('cur').siblings().removeClass('cur');
+                        $(".mod_address_slide_tabs_1").find('li:last-child').hide();
+                    }
                 })
                 $("body").on("click", '.close', function() {
                     if ($(".showAddr").html() == "") {
@@ -183,17 +172,25 @@
                     $("#addrSelDiv").hide();
                 })
             },
-            updateLevel: function(flag, val) { //  更新level编号
-                if (flag) {
+            updateLevel: function(val) { //  更新level编号
+                var obj = $(".mod_address_slide_tabs_1").find('li[level=' + $(val).attr('level') + ']'); //不在重复显示添加相同的Li  如果存在
+                if (obj && obj.length > 0) {
+                    obj.find('span').html($(val).html());
+                } else {
                     var clonehtml = $(".mod_address_slide_tabs_1").find('li:last-child').clone(); //请选择部分
+                    clonehtml = $(clonehtml).attr('level', $(val).attr('level')).find('span').html($(val).html()).end();
                     $(".mod_address_slide_tabs_1").find('li:last-child').before(clonehtml);
                 }
-                $(".mod_address_slide_tabs_1").find('li:last-child').prev().find('span').html(val);
-                var obj = $(".mod_address_slide_tabs_1").find('li');
-                for (var i = 1; i <= obj.length; i++) {
-                    obj.eq(i - 1).attr('level', i);
-                }
                 $(".mod_address_slide_tabs_1").find('li:last-child').addClass('cur').siblings().removeClass('cur');
+            },
+            setValue: function() {
+                city = "";
+                var obj = $("#addrNav").find('li');
+                for (var i = 0; i < obj.length - 1; i++) {
+                    city += obj.eq(i).find('span').html();
+                }
+                $(".showAddr").html(city);
+                $("#addrSelDiv").hide();
             }
         };
 
