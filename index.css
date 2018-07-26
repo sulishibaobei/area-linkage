@@ -53,7 +53,7 @@ header a {
 .mod_address_slide_list_1 li.on:before,
 .mod_address_slide_list_1 li:before,
 .mod_address_slide_list_2 li.on:after {
-    background: url(../images/sprite_address_slide_06def65c.png) no-repeat;
+    background: url(sprite_address_slide_06def65c.png) no-repeat;
     background-size: 20px 80px
 }
 
