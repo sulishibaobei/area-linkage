@@ -155,7 +155,7 @@
                         })
                     }
                 });
-                $("body").on('click', '.mod_address_slide_tabs_1 li', function() {
+                $("body").on('click', '.mod_address_slide_tabs_1 li:not(:last-child)', function() {
                     var index = $(this).index();
                     if ($(this).parents('.mod_address_slide_tabs_1').find('li').length == 1) {
                         return false;

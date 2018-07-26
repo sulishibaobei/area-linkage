@@ -53,7 +53,6 @@
                     <li><span>请选择</span></li>
                 </ul>
                 <ul class="mod_address_slide_list_2" id="addrList">
-                    <!-- <li class="" value="1" level="1">北京市</li> -->
                 </ul>
             </div>
         </div>
@@ -138,7 +137,7 @@
                         return;
                     }
                 });
-                $("body").on('click', '.mod_address_slide_tabs_1 li', function() {
+                $("body").on('click', '.mod_address_slide_tabs_1 li:not(:last-child)', function() {
                     var index = $(this).index();
                     if ($(this).parents('.mod_address_slide_tabs_1').find('li').length == 1) {
                         return false;
