@@ -32,8 +32,7 @@ header a {
     width: 100%;
     -webkit-box-flex: 1;
     -webkit-flex: 1;
-    flex: 1;
-    cursor: pointer;
+    flex: 1
 }
 
 .mod_address_slide_foot:before,
@@ -54,7 +53,7 @@ header a {
 .mod_address_slide_list_1 li.on:before,
 .mod_address_slide_list_1 li:before,
 .mod_address_slide_list_2 li.on:after {
-    background: url(sprite_address_slide_06def65c.png) no-repeat;
+    background: url(../images/sprite_address_slide_06def65c.png) no-repeat;
     background-size: 20px 80px
 }
 
@@ -169,8 +168,7 @@ header a {
     font-size: 14px;
     height: 300px;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    cursor: pointer;
+    -webkit-overflow-scrolling: touch
 }
 
 .mod_address_slide_list_1 {
